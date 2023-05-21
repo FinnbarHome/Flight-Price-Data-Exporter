@@ -8,21 +8,22 @@ namespace CheapestFlights
 {
     internal class UserInteraction
     {
+        public string Date;
+        public List<string> Destinations;
+
         public UserInteraction() {
-            string date;
-            string time;
+            Date = "";
+            Destinations = new List<string>();
         }
 
         public List<string> GetDestinationsFromUser()
         {
-            List<string> destinations = new List<string>();
-
             Console.Write("Enter the destinations (separated by a comma): ");
-            string destinationsInput = Console.ReadLine();
+            string destinationsInput = Console.ReadLine() ?? "";
 
             if (!string.IsNullOrEmpty(destinationsInput))
             {
-                destinations.AddRange(destinationsInput.Split(',', StringSplitOptions.RemoveEmptyEntries));
+                Destinations.AddRange(destinationsInput.Split(',', StringSplitOptions.RemoveEmptyEntries));
             }
             else
             {
@@ -30,16 +31,15 @@ namespace CheapestFlights
                 Environment.Exit(0); // Stop execution if no destinations were entered
             }
 
-            return destinations;
+            return Destinations;
         }
 
         public string GetDateFromUser()
         {
-            string date = "";
             while (true)
             {
                 Console.Write("Enter the date in the form YEAR-MONTH-DAY (eg:2023-05-22) or YEAR-MONTH (eg:2023-02 for February): ");
-                string dateInput = Console.ReadLine();
+                string dateInput = Console.ReadLine() ?? "";
 
                 if (!string.IsNullOrEmpty(dateInput))
                 {
@@ -47,7 +47,7 @@ namespace CheapestFlights
                     if (DateTime.TryParseExact(dateInput, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out temp) ||
                         DateTime.TryParseExact(dateInput, "yyyy-MM", null, System.Globalization.DateTimeStyles.None, out temp))
                     {
-                        date = dateInput;
+                        Date = dateInput;
                         break;
                     }
                     else
@@ -60,11 +60,7 @@ namespace CheapestFlights
                     Console.WriteLine("Enter a valid date or month");
                 }
             }
-
-            return date;
+            return Date;
         }
-
-
-
     }
 }
