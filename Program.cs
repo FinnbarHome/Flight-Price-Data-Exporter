@@ -10,8 +10,5 @@ internal class Program
     static void Main()
     {
         FlightState flightState = new FlightState();
-
     }
-
-
 }

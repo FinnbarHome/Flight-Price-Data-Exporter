@@ -1,17 +1,34 @@
 ﻿using HtmlAgilityPack;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
+using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
 using System.Text;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CheapestFlights
 {
     internal class Scraper
     {
+        //Data to write to the Excel file 
+        private List<FlightData> flightDataList = new List<FlightData>();
+        //Path to the Excel file
+        private string excelFilePath = "flightData.xlsx";
+        //Base URL for the Ryanair website
+        private const string BaseUrl = "https://www.ryanair.com/gb/en/trip/flights/select?adults={0}&teens=0&children=0&infants=0&dateOut={1}&dateIn=&isConnectedFlight=false&isReturn=false&discount=0&promoCode=&originIata={2}&destinationIata={3}&tpAdults={0}&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate={3}&tpEndDate=&tpDiscount=0&tpPromoCode=&tpOriginIata={2}&tpDestinationIata={3}";
+
+        //XPaths for the data we want to scrape
+        private const string NormalPriceXPath = "/html/body/app-root/flights-root/div/div/div/div/flights-lazy-content/flights-summary-container/flights-summary/div/div[1]/journey-container/journey/flight-list/div/flight-card-new/div/div/div[4]/flight-card-summary/div[2]/div/div/span/flights-price-simple";
+        private const string SalePriceXPath = "/html/body/app-root/flights-root/div/div/div/div/flights-lazy-content/flights-summary-container/flights-summary/div/div[1]/journey-container/journey/flight-list/div/flight-card-new/div/div/div[4]/flight-card-summary/div[2]/div/div/span[2]/flights-price-simple";
+        private const string TimeXPath = "/html/body/app-root/flights-root/div/div/div/div/flights-lazy-content/flights-summary-container/flights-summary/div/div[1]/journey-container/journey/flight-list/div/flight-card-new/div/div/flight-info-new/div[1]/span[1]";
+
+        //List for error mismatch 
+        private List<string> errorMismatchDates = new List<string>();
+        private List<string> mismatchData = new List<string>();
+
 
         public void FetchFlightData(IWebDriver driver, string date, string departureCity, List<string> destinations, string adultsAmount)
         {
@@ -36,62 +53,145 @@ namespace CheapestFlights
                 string dateForDay = $"{year}-{month.ToString("D2")}-{day.ToString("D2")}";
                 FetchFlightDataSingleDate(driver, dateForDay, departureCity, destinations, adultsAmount);
             }
+
+            Console.WriteLine("The following dates had a mismatch in the number of time nodes and price nodes:");
+            WriteDataToFile(mismatchData, "mismatchData.txt");
         }
 
         public void FetchFlightDataSingleDate(IWebDriver driver, string date, string departureCity, List<string> destinations, string adultsAmount)
         {
             foreach (string destination in destinations)
             {
-                string url = BuildUrl(date, departureCity, destination, adultsAmount);
-                Console.WriteLine("");
-                Console.WriteLine($"Checking on the date {date} using the current url:");
-                Console.WriteLine(url);
-                Console.WriteLine("");
+                string url = string.Format(BaseUrl, adultsAmount, date, departureCity, destination);
+                Console.WriteLine($"Checking on the date {date} using the current url:\n{url}");
 
                 driver.Navigate().GoToUrl(url);
 
-                System.Threading.Thread.Sleep(5000);  // wait for the page to load
+                System.Threading.Thread.Sleep(500);  // wait for the page to load
+                int count = 0;
+                while (count < 22)
+                {
+                    if (CheckElementExists(driver, TimeXPath))
+                    {
+                        count = 22;
+                    }
+                    else
+                    {
+                        System.Threading.Thread.Sleep(250);
+                        count++;
+                    }
+
+                }
+
                 var pageSource = driver.PageSource;
+
+                
 
                 var htmlDocument = new HtmlDocument();
                 htmlDocument.LoadHtml(pageSource);
 
-                //Normal Price
-                var priceXNode = "/html/body/app-root/flights-root/div/div/div/div/flights-lazy-content/flights-summary-container/flights-summary/div/div[1]/journey-container/journey/flight-list/div/flight-card-new/div/div/div[4]/flight-card-summary/div[2]/div/div/span/flights-price-simple";
-                //Sale Price
-                var priceXNode2 = "/html/body/app-root/flights-root/div/div/div/div/flights-lazy-content/flights-summary-container/flights-summary/div/div[1]/journey-container/journey/flight-list/div/flight-card-new/div/div/div[4]/flight-card-summary/div[2]/div/div/span[2]/flights-price-simple";
-                var timeXNode = "/html/body/app-root/flights-root/div/div/div/div/flights-lazy-content/flights-summary-container/flights-summary/div/div[1]/journey-container/journey/flight-list/div/flight-card-new/div/div/flight-info-new/div[1]/span[1]";
+                HtmlNodeCollection priceNodes = htmlDocument.DocumentNode.SelectNodes(CheckElementExists(driver, SalePriceXPath) ? SalePriceXPath : NormalPriceXPath);
+                HtmlNodeCollection timeNodes = htmlDocument.DocumentNode.SelectNodes(TimeXPath);
 
-                var priceNodes = htmlDocument.DocumentNode.SelectNodes(priceXNode);  
-                var timeNodes = htmlDocument.DocumentNode.SelectNodes(timeXNode);  
-
-                for(int i = 0; i < priceNodes.Count; i++)
+                if (priceNodes != null && timeNodes != null)
                 {
-                    Console.WriteLine($"priced at {priceNodes[i].InnerHtml.Trim()}");
-                }   
-                //If there isn't a normal price available, try the sale price
-                if(priceNodes == null)
-                {
-                    Console.WriteLine("No normal price found, trying sale price");
-                    priceNodes = htmlDocument.DocumentNode.SelectNodes(priceXNode2);
-                }
-
-
-                    if (priceNodes != null && timeNodes != null && timeNodes.Count == priceNodes.Count)
-                {
-                    for (int i = 0; i < priceNodes.Count; i++)
+                    if (timeNodes.Count == priceNodes.Count)
                     {
-                        Console.WriteLine($"A flight from {departureCity} to {destination} departing at {timeNodes[i].InnerHtml.Trim()} is priced at {priceNodes[i].InnerHtml.Trim()}");
+                        for (int i = 0; i < priceNodes.Count; i++)
+                        {
+                            string time = timeNodes[i].InnerHtml.Trim();
+                            string price = priceNodes[i].InnerHtml.Trim();
+                            Console.WriteLine($"A flight from {departureCity} to {destination} departing at {time} is priced at {price}");
+
+                            var flightData = new FlightData
+                            {
+                                Date = date,
+                                Departure = departureCity,
+                                Destination = destination,
+                                Time = time,
+                                Price = price
+                            };
+                            flightDataList.Add(flightData);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Mismatch in number of time nodes ({timeNodes.Count}) and price nodes ({priceNodes.Count})");
+                        errorMismatchDates.Add(date);
+
+                        mismatchData.Add($"Mismatch on date {date} at url: {url}. Time nodes: {timeNodes.Count}, Price nodes: {priceNodes.Count}");
+                    }
+                }
+                else
+                {
+                    if (priceNodes == null)
+                    {
+                        Console.WriteLine("No price nodes found");
+                    }
+                    if (timeNodes == null)
+                    {
+                        Console.WriteLine("No time nodes found");
                     }
                 }
             }
+
+            WriteDataToExcelFile(flightDataList, excelFilePath);
         }
 
-
-        private string BuildUrl(string date, string departureCity, string destination, string adultsAmount)
+        private bool CheckElementExists(IWebDriver driver, string xpath)
         {
-            return $"https://www.ryanair.com/gb/en/trip/flights/select?adults={adultsAmount}&teens=0&children=0&infants=0&dateOut={date}&dateIn=&isConnectedFlight=false&isReturn=false&discount=0&promoCode=&originIata={departureCity}&destinationIata={destination}&tpAdults={adultsAmount}&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate={destination}&tpEndDate=&tpDiscount=0&tpPromoCode=&tpOriginIata={departureCity}&tpDestinationIata={destination}";
+            //Check if the element exists
+            try
+            {
+                driver.FindElement(By.XPath(xpath));
+                return true;
+            }
+            catch (NoSuchElementException)
+            {
+                return false;
+            }
         }
+
+        public void WriteDataToExcelFile(List<FlightData> flightDataList, string excelFilePath)
+        {
+            var file = new FileInfo(excelFilePath);
+            using (var package = new ExcelPackage(file))
+            {
+                var worksheet = package.Workbook.Worksheets[0]; // This is Sheet1
+
+                for (int i = 0; i < flightDataList.Count; i++)
+                {
+                    // Assuming first row is the header.
+                    // So actual data starts from the second row.
+                    var row = i + 2;
+
+                    // Update the necessary columns in the worksheet
+                    worksheet.Cells[row, 1].Value = flightDataList[i].Date;         // Column A
+                    worksheet.Cells[row, 2].Value = flightDataList[i].Departure;    // Column B
+                    worksheet.Cells[row, 3].Value = flightDataList[i].Destination;  // Column C
+                    worksheet.Cells[row, 4].Value = flightDataList[i].Time;         // Column D
+                    worksheet.Cells[row, 5].Value = flightDataList[i].Price;        // Column E
+                }
+
+                package.Save();
+            }
+        }
+
+        private void WriteDataToFile(List<string> data, string filePath)
+        {
+            StringBuilder fileContent = new StringBuilder();
+
+            //Append all records to the string builder
+            foreach (var record in data)
+            {
+                fileContent.AppendLine(record);
+            }
+
+            //Explicitly use UTF-8 encoding
+            File.WriteAllText(filePath, fileContent.ToString(), Encoding.UTF8);
+            Console.WriteLine($"Written data to {filePath}");
+        }
+
+
     }
 }
-
