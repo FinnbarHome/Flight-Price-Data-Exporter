@@ -63,8 +63,7 @@ namespace CheapestFlights
                 FetchFlightDataSingleDate(driver, dateForDay, departureCity, destinations, adultsAmount, isReturn);
             }
 
-            driver.Quit();
-            Environment.Exit(0);
+            
         }
 
         private void FetchReturnFlightDataForWholeMonth(IWebDriver driver, string date, string departureCity, List<string> destinations, string adultsAmount)
@@ -79,8 +78,7 @@ namespace CheapestFlights
                 FetchFlightDataSingleDate(driver, dateForDay, departureCity, destinations, adultsAmount, true);
             }
 
-            driver.Quit(); // Close the browser session
-            Environment.Exit(0); // Exit the program
+       
         }
 
 

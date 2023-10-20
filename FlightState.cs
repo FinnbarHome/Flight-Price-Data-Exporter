@@ -36,7 +36,7 @@ public class FlightState
         //SCQ Santiago, SVQ Seville, TFS Tenerife South, VLC Valencia, GOT Goteborg Landvetter, BFS Belfast International, BOH Bournemouth, STN London Stansted, NQY Newquay Cornwall
 
         List<Airport> DepartureAirports = new List<Airport>();
-        string departureDate = "2023-11";
+        string departureDate = "2023-12";
 
         if (!Directory.Exists(folderPath))
         {
@@ -88,6 +88,8 @@ public class FlightState
                 flightDataFetcher.FetchFlightData(driver, departureDate, airport.Code, airport.Destinations, "1");
                 flightDataFetcher.FetchReturnFlightData(driver, departureDate, airport.Code, airport.Destinations, "1");
             }
+            driver.Quit(); // Close the browser session
+            Environment.Exit(0); // Exit the program
         }
     }
 
@@ -97,12 +99,6 @@ public class FlightState
         using (StreamWriter writer = System.IO.File.CreateText(Path.Combine(folderPath, "GLA.txt")))
         {
             writer.WriteLine("GLW,Glasgow,CRL,DUB,KRK,WMI,WRO,ALC,AGP");
-        }
-
-        //PIK Airport file
-        using (StreamWriter writer = System.IO.File.CreateText(Path.Combine(folderPath, "GLA.txt")))
-        {
-            writer.WriteLine("GLW,Glasgow Prestwick,LOCATIONS LIST HERE");
         }
 
         //EDI Airport file

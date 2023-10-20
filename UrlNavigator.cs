@@ -16,10 +16,10 @@ namespace CheapestFlights
             Console.WriteLine(url);
             driver.Navigate().GoToUrl(url);
 
-            System.Threading.Thread.Sleep(100);  // wait for the page to load
+            System.Threading.Thread.Sleep(200);  // wait for the page to load
 
             int retryCount = 0;
-            while (retryCount < 20)
+            while (retryCount < 5)
             {
                 if (CheckElementExists(driver, "/html/body/app-root/flights-root/div/div/div/div/flights-lazy-content/flights-summary-container/flights-summary/div/div[1]/journey-container/journey/flight-list/ry-spinner/div/flight-card-new/div/div/flight-info-new/div[1]/span[1]"))
                 {
@@ -27,7 +27,7 @@ namespace CheapestFlights
                 }
                 else
                 {
-                    System.Threading.Thread.Sleep(100);
+                    System.Threading.Thread.Sleep(200);
                     retryCount++;
                 }
             }
