@@ -6,7 +6,8 @@ using static System.Net.WebRequestMethods;
 using System.Collections.Generic;
 using System.Runtime.ConstrainedExecution;
 using System;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using WebDriverManager;
+using WebDriverManager.DriverConfigs.Impl;
 
 public class FlightState
 {
@@ -35,7 +36,7 @@ public class FlightState
         //SCQ Santiago, SVQ Seville, TFS Tenerife South, VLC Valencia, GOT Goteborg Landvetter, BFS Belfast International, BOH Bournemouth, STN London Stansted, NQY Newquay Cornwall
 
         List<Airport> DepartureAirports = new List<Airport>();
-        string departureDate = "2023-07";
+        string departureDate = "2023-11";
 
         if (!Directory.Exists(folderPath))
         {
@@ -71,8 +72,7 @@ public class FlightState
             }
         }
 
-        //Path to your ChromeDriver executable
-        string driverPath = @"C:\path\to\chromedriver";
+        new DriverManager().SetUpDriver(new ChromeConfig());
 
         //ChromeOptions object to configure ChromeDriver
         ChromeOptions options = new ChromeOptions();
@@ -81,7 +81,7 @@ public class FlightState
         //Suppress INFO and WARNING console messages
         options.AddArgument("--log-level=3");
 
-        using (IWebDriver driver = new ChromeDriver(driverPath, options))
+        using (IWebDriver driver = new ChromeDriver(options))
         {
             foreach (Airport airport in DepartureAirports)
             {
@@ -108,7 +108,7 @@ public class FlightState
         //EDI Airport file
         using (StreamWriter writer = System.IO.File.CreateText(Path.Combine(folderPath, "EDI.txt")))
         {
-            writer.WriteLine("EDI,Edinburgh Airport,ALC,BCN,VIE,CRL,SOF,ZAD,PRG,BLL,CPH,BZR,BOD,CCF,GNB,MRS,NTE,FNI,BVA,PIS,TLS,BER,NRN,HAM,CFU,RHO,BUD,ORK,DUB,NOC,SNN,BRI,BLQ,BGY,NAP,PMO,PSA,CIA,TRN,VCE,VRN,RIX,KUN,MLA,RAK,EIN,GDN,FAO,LIS,OPO,OTP,BTS,FUE,LPA,IBZ,ACE,MAD,AGP,PMI,SDR,SCQ,SVQ,TFS,VLC,GOT,BFS,BOH,STN,NQY");
+            writer.WriteLine("EDI,Edinburgh Airport,ALC");
         }
     }
 }
