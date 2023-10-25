@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CheapestFlights
+﻿namespace CheapestFlightsRewrite
 {
     internal class FlightData
     {
@@ -14,5 +8,4 @@ namespace CheapestFlights
         public string? Time { get; set; }
         public string? Price { get; set; }
     }
-
 }

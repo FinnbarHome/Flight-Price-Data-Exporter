@@ -1,110 +1,126 @@
-﻿using CheapestFlights;
+﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium;
-using OfficeOpenXml;
-using static System.Net.WebRequestMethods;
-using System.Collections.Generic;
-using System.Runtime.ConstrainedExecution;
-using System;
 using WebDriverManager;
 using WebDriverManager.DriverConfigs.Impl;
 
-public class FlightState
+namespace CheapestFlightsRewrite
 {
-    private UserInteraction userInteraction;
-    private Scraper flightDataFetcher;
-    private string Date;
-    private bool IsReturn = false;
-
-    public FlightState()
+    internal class FlightState
     {
-        userInteraction = new UserInteraction();
-        flightDataFetcher = new Scraper();
-        Date = "";
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-        Initialize();
-    }
+        private List<string> endLocs = new List<string> { "ALC", "STN", "AGP" };
+        private List<string> startLocs = new List<string> { "EDI", "GLA" };
+        private string adults = "1";
+        private string date = "2023-11";
+        private List<FlightData> flightDataList;
+        private FlightScraper flightScraper;
+        private IWebDriver driver;
 
-    public void Initialize()
-    {
-        string folderPath = "Airports";
-
-        //ALC alicante, BCN barcelona, VIE vienna, CRL brussels, SOF sofia, ZAD zadar, PRG prague, BLL Billund, CPH Copenhagen, BZR Beziers, BOD Bordeaux, CCF Carcassonne, GNB Grenoble, MRS Marseille, NTE Nantes
-        //FNI Nimes, BVA Paris Beauvais, PIS Poitiers, TLS Toulose, BER Berlin Brandenburg, NRN Dusseldorf Weeze, HAM Hamburg, CFU Corfu, RHO Rhodes, BUD Budapest, ORK Cork, DUB Dublin, NOC Knock, SNN Shannon
-        //BRI Bari, BLQ Bologna, BGY Milan Bergamo, NAP Naples, PMO Palermo, PSA Pisa, CIA Rome Ciampino, TRN Turin, VCE Venice M.Polo, VRN Verona, RIX Riga, KUN Kaunas, MLA Malta, RAK Marrakesh, EIN Eindhoven
-        //GDN Gdansk, FAO Faro, LIS Lisbon, OPO Porto, OTP Bucharest, BTS Bratislava, FUE Fuerteventura, LPA Gran Canaria, IBZ Ibiza, ACE Lanzarote, MAD Madrid, AGP Malaga, PMI Palma de Mallorca, SDR Santander
-        //SCQ Santiago, SVQ Seville, TFS Tenerife South, VLC Valencia, GOT Goteborg Landvetter, BFS Belfast International, BOH Bournemouth, STN London Stansted, NQY Newquay Cornwall
-
-        List<Airport> DepartureAirports = new List<Airport>();
-        string departureDate = "2023-12";
-
-        if (!Directory.Exists(folderPath))
+        public FlightState()
         {
-            // Create directory if it doesn't exist
-            Directory.CreateDirectory(folderPath);
+            // Automatically download and setup the latest ChromeDriver
+            new DriverManager().SetUpDriver(new ChromeConfig());
+
+
+            flightDataList = new List<FlightData>();
+            flightScraper = new FlightScraper();
+
+            ChromeOptions options = new ChromeOptions();
+            options.AddArgument("headless");
+            options.AddArgument("--log-level=3");
+
+            // Now, no need to specify the path, WebDriverManager has handled it
+            driver = new ChromeDriver(options);
+
+            Initialize();
+            DisplayFlightData();
         }
 
-        // Fetch all text files from the directory
-        var files = Directory.GetFiles(folderPath, "*.txt");
-
-        if (files.Length == 0)
+        public void Initialize()
         {
-            // If no files exist, create default files
-            CreateDefaultAirportFiles(folderPath);
-            files = Directory.GetFiles(folderPath, "*.txt");
-        }
-
-        // Read airport data from each file
-        foreach (var file in files)
-        {
-            var lines = System.IO.File.ReadLines(file);
-            foreach (var line in lines)
+            foreach (var startLoc in startLocs)
             {
-                var values = line.Split(',');
-                if (values.Length < 2)
+
+
+                foreach (var endLoc in endLocs)
                 {
-                    continue; // skip if line is not valid
+
+                    if (date.Length == 7) // Indicates format is "YYYY-MM"
+                    {
+                        int year = int.Parse(date.Split('-')[0]);
+                        int month = int.Parse(date.Split('-')[1]);
+                        int daysInMonth = DateTime.DaysInMonth(year, month);
+
+                        for (int day = 1; day <= daysInMonth; day++)
+                        {
+                            string fullDate = $"{year}-{month.ToString("00")}-{day.ToString("00")}";
+                            string url = ConstructUrl(fullDate, startLoc, endLoc);
+                            Console.WriteLine(url);
+                            Console.WriteLine();  // Print a blank line
+
+                            try
+                            {
+                                var dailyFlightDataList = flightScraper.ScrapeFlights(driver, url, startLoc, endLoc, fullDate);
+
+                                flightDataList.AddRange(dailyFlightDataList);
+                            }
+                            catch (WebDriverTimeoutException)
+                            {
+                                Console.WriteLine($"WEB DRIVER TIMEOUT for {fullDate}");
+                                continue;  // Skip this day and move to the next
+                            }
+                        }
+                    }
+                    else
+                    {
+                        string url = ConstructUrl(date, startLoc, endLoc);
+                        Console.WriteLine(url);
+                        Console.WriteLine();  // Print a blank line
+
+                        flightDataList = flightScraper.ScrapeFlights(driver, url, startLoc, endLoc, date);
+                    }
+
+
                 }
-
-                var airport = new Airport(values[0], values[1]);
-                airport.AddDestinations(values.Skip(2).ToArray()); // Add all destinations
-                DepartureAirports.Add(airport);
             }
+            driver.Close();
+            driver.Quit();
         }
 
-        new DriverManager().SetUpDriver(new ChromeConfig());
-
-        //ChromeOptions object to configure ChromeDriver
-        ChromeOptions options = new ChromeOptions();
-        //Launches the browser in headless mode (without GUI)
-        options.AddArgument("--headless");
-        //Suppress INFO and WARNING console messages
-        options.AddArgument("--log-level=3");
-
-        using (IWebDriver driver = new ChromeDriver(options))
+        private void DisplayFlightData()
         {
-            foreach (Airport airport in DepartureAirports)
+            if (flightDataList.Count > 0)
             {
-                flightDataFetcher.FetchFlightData(driver, departureDate, airport.Code, airport.Destinations, "1");
-                flightDataFetcher.FetchReturnFlightData(driver, departureDate, airport.Code, airport.Destinations, "1");
+                Console.WriteLine("\nAll flights:");
+
+                // Group flight data by departure and then by destination
+                var groupedByDeparture = flightDataList.GroupBy(flight => flight.Departure);
+
+                foreach (var departureGroup in groupedByDeparture)
+                {
+                    Console.WriteLine($"\nFlights from {departureGroup.Key}:"); // departureGroup.Key is the startLoc
+
+                    var groupedByDestination = departureGroup.GroupBy(flight => flight.Destination);
+                    foreach (var destinationGroup in groupedByDestination)
+                    {
+                        Console.WriteLine($"\nTo {destinationGroup.Key}:"); // destinationGroup.Key is the endLoc
+
+                        foreach (FlightData flightData in destinationGroup)
+                        {
+                            Console.WriteLine($"Departing at {flightData.Time} on {flightData.Date} is priced at {flightData.Price}");
+                        }
+                    }
+                }
             }
-            driver.Quit(); // Close the browser session
-            Environment.Exit(0); // Exit the program
-        }
-    }
-
-    private void CreateDefaultAirportFiles(string folderPath)
-    {
-        //GLA Airport file
-        using (StreamWriter writer = System.IO.File.CreateText(Path.Combine(folderPath, "GLA.txt")))
-        {
-            writer.WriteLine("GLW,Glasgow,CRL,DUB,KRK,WMI,WRO,ALC,AGP");
+            else
+            {
+                Console.WriteLine($"No data found for date {date}");
+            }
         }
 
-        //EDI Airport file
-        using (StreamWriter writer = System.IO.File.CreateText(Path.Combine(folderPath, "EDI.txt")))
+        private string ConstructUrl(string dateToUse, string startLoc, string endLoc)
         {
-            writer.WriteLine("EDI,Edinburgh Airport,ALC");
+            return $"https://www.ryanair.com/gb/en/trip/flights/select?adults={adults}&teens=0&children=0&infants=0&dateOut={dateToUse}&dateIn=&isConnectedFlight=false&isReturn=false&discount=0&promoCode=&originIata={startLoc}&destinationIata={endLoc}&tpAdults={adults}&tpTeens=0&tpChildren=0&tpInfants=0&tpStartDate={dateToUse}&tpEndDate=&tpDiscount=0&tpPromoCode=&tpOriginIata={startLoc}&tpDestinationIata={endLoc}";
         }
+
     }
 }
