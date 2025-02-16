@@ -10,7 +10,7 @@ namespace CheapestFlightsRewrite
         private List<string> endLocs = new List<string> { "ALC", "STN", "AGP" };
         private List<string> startLocs = new List<string> { "EDI", "GLA" };
         private string adults = "1";
-        private string date = "2023-11";
+        private string date = "2025-05";
         private List<FlightData> flightDataList;
         private FlightScraper flightScraper;
         private IWebDriver driver;
