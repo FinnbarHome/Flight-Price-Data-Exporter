@@ -1,18 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CheapestFlights
+﻿namespace CheapestFlightsRewrite
 {
     internal class FlightData
     {
-        public string? Date { get; set; }
-        public string? Departure { get; set; }
-        public string? Destination { get; set; }
-        public string? Time { get; set; }
-        public string? Price { get; set; }
-    }
+        public string Date { get; }
+        public string Departure { get; }
+        public string Destination { get; }
+        public string Time { get; }
+        public string Price { get; }
 
+        public FlightData(string date, string departure, string destination, string time, string price)
+        {
+            Date = date;
+            Departure = departure;
+            Destination = destination;
+            Time = time;
+            Price = price;
+        }
+
+        public override string ToString()
+        {
+            return $"A flight from {Departure} to {Destination} departing at {Time} on {Date} is priced at {Price}";
+        }
+    }
 }

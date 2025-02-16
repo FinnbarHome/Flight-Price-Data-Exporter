@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using HtmlAgilityPack;
-using CheapestFlights;
-
-internal class Program
+﻿namespace CheapestFlightsRewrite
 {
-    static void Main()
+    internal class Program
     {
-        FlightState flightState = new FlightState();
+        private static void Main(string[] args)
+        {
+            FlightState flightState = new FlightState();
+            Console.ReadLine();
+        }
     }
 }
