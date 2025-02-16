@@ -1,12 +1,7 @@
 ﻿
-
-### **📌 README.md**
-```md
 # 🛫 Cheapest Flights Scraper
 
 A **C#** console application that scrapes **Ryanair** flight data using **Selenium** and **HtmlAgilityPack**. This tool automatically retrieves the cheapest flights between selected departure and destination airports over a specified date range.
-
----
 
 ## ✈️ Features
 - **Scrapes flight prices from Ryanair** for specified routes and dates.
@@ -15,15 +10,12 @@ A **C#** console application that scrapes **Ryanair** flight data using **Seleni
 - **Supports retry mechanisms** for improved reliability.
 - **Outputs flight details** (departure time, price, etc.) in the console.
 
----
-
 ## ⚡ Technologies Used
 - **C# (.NET 8)**
 - **Selenium WebDriver** (for browser automation)
 - **HtmlAgilityPack** (for HTML parsing)
 - **WebDriverManager** (for auto-installing the correct ChromeDriver)
 
----
 
 ## 🛠️ Installation
 
@@ -53,8 +45,6 @@ The program requires an up-to-date version of **Google Chrome** and **ChromeDriv
 - **Google Chrome is installed and updated.**
 - The correct **ChromeDriver** version is installed via WebDriverManager.
 
----
-
 ## 🚀 Usage
 
 ### **Run the Program**
@@ -76,8 +66,6 @@ To customize your search:
    ```
 4. Save the changes and re-run the program.
 
----
-
 ## 📊 Output Format
 After running the program, flight data will be displayed in the console:
 ```
@@ -93,7 +81,6 @@ Flight details include:
 - **Date**
 - **Price**
 
----
 
 ## 🔧 Troubleshooting
 
@@ -137,23 +124,3 @@ Current browser version is 132.0.6834.197
 - Check if Ryanair **changed their website structure**.
 - Manually search for a flight on Ryanair and **compare the data**.
 - Ensure the search parameters (dates, airports) **actually have flights available**.
-
----
-
-## 👨‍💻 Contributing
-Feel free to fork this repository and submit **pull requests** for improvements! 🚀
-
-1. **Fork the repo**
-2. **Create a feature branch**
-   ```sh
-   git checkout -b feature/new-feature
-   ```
-3. **Commit changes**
-   ```sh
-   git commit -m "Added new feature"
-   ```
-4. **Push and create a PR**
-   ```sh
-   git push origin feature/new-feature
-   ```
-
