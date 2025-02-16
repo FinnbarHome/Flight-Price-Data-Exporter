@@ -7,7 +7,6 @@ A **C#** console application that scrapes **Ryanair** flight data using **Seleni
 - **Scrapes flight prices from Ryanair** for specified routes and dates.
 - **Uses Selenium WebDriver** to automate browser navigation.
 - **Parses HTML with HtmlAgilityPack** for structured data extraction.
-- **Supports retry mechanisms** for improved reliability.
 - **Outputs flight details** (departure time, price, etc.) in the console.
 
 ## ⚡ Technologies Used
