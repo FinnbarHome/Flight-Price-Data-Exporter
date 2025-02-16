@@ -361,5 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/combined_cs_files.txt
+
 /combiner.py
+/combined_cs_files.txt
+
