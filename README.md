@@ -1,10 +1,10 @@
 ﻿
-# 🛫 Cheapest Flights Scraper
+# 🛫 Flight Price Data Exporter
 
-A **C#** console application that scrapes **Ryanair** flight data using **Selenium** and **HtmlAgilityPack**. This tool automatically retrieves the cheapest flights between selected departure and destination airports over a specified date range.
+A **C#** console application that retrieves **Ryanair** flight data using **Selenium** and **HtmlAgilityPack**. This tool automatically retrieves the cheapest flights between selected departure and destination airports over a specified date range.
 
 ## ✈️ Features
-- **Scrapes flight prices from Ryanair** for specified routes and dates.
+- **Retrieves flight prices from Ryanair** for specified routes and dates.
 - **Uses Selenium WebDriver** to automate browser navigation.
 - **Parses HTML with HtmlAgilityPack** for structured data extraction.
 - **Outputs flight details** (departure time, price, etc.) in the console.
@@ -20,8 +20,7 @@ A **C#** console application that scrapes **Ryanair** flight data using **Seleni
 
 ### **1️⃣ Clone the Repository**
 ```sh
-git clone https://github.com/yourusername/CheapestFlightsScraper.git
-cd CheapestFlightsScraper
+git clone https://github.com/FinnbarHome/Flight-Price-Data-Exporter.git
 ```
 
 ### **2️⃣ Install Dependencies**
